@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beyond the Static - Multimodal Strategy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+/* ── Base ── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { width: 100%; height: 100%; overflow: hidden; }
+
+body {
+  background-color: #f1f5f9;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+}
+
+#deck {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1280px;
+  height: 720px;
+  overflow: hidden;
+}
+
+/* ── Slide navigation UI ── */
+.nav-dots {
+  position: fixed;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 300;
+}
+
+.nav-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.nav-dot.active {
+  background: #1e3a8a;
+  transform: scale(1.5);
+}
+
+#slide-counter {
+  position: fixed;
+  bottom: 22px;
+  right: 32px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+  z-index: 300;
+  user-select: none;
+}
+
+.slide-container {
+  width: 1280px;
+  height: 720px;
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 60px 80px;
+  position: absolute;
+  top: 0; left: 0;
+  overflow: hidden;
+  color: #1e293b;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+}
+
+/* First slide visible by default (overridden by JS) */
+#deck > .slide-container:first-child {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+.slide-container::before {
+  content: "";
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(30,58,138,0.06) 0%, transparent 70%);
+  z-index: 0;
+}
+
+.slide-container::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 8px;
+  background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+  z-index: 1;
+}
+
+.slide-container > * { position: relative; z-index: 2; }
+
+/* ── Typography ── */
+h1 {
+  font-family: 'Urbanist', sans-serif;
+  font-size: 80px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -2px;
+}
+
+.slide-title {
+  font-family: 'Urbanist', sans-serif;
+  font-size: 42px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.slide-title::after {
+  content: "";
+  flex-grow: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+h3 {
+  font-family: 'Urbanist', sans-serif;
+  font-size: 32px;
+  color: #1e3a8a;
+  margin-bottom: 16px;
+}
+
+p { font-size: 20px; line-height: 1.6; color: #475569; }
+
+.subtitle { font-size: 30px; font-weight: 400; color: #64748b; }
+
+/* ── Layout ── */
+.content-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.section-layout {
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.section-layout h2 {
+  font-family: 'Urbanist', sans-serif;
+  font-size: 72px;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+.accent-bar {
+  width: 100px; height: 6px;
+  background: #1e3a8a;
+  margin: 20px auto;
+  border-radius: 10px;
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.image-wrapper {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  height: 420px;
+  width: 100%;
+}
+
+.image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ── Info Cards ── */
+.info-card {
+  background: #f8fafc;
+  padding: 22px 26px;
+  border-radius: 16px;
+  border: 1px solid #1e3a8a;
+  margin-bottom: 18px;
+}
+
+.info-card h4 {
+  font-family: 'Urbanist', sans-serif;
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: #0f172a;
+}
+
+.info-card p { font-size: 17px; }
+
+/* ── Modality Icon (section headers) ── */
+.modality-icon {
+  font-size: 52px;
+  color: rgba(30,58,138,0.25);
+  margin-bottom: 12px;
+}
+
+/* ── Format Chip (project slide titles) ── */
+.step-chip {
+  font-size: 13px; font-weight: 600;
+  color: #1e3a8a;
+  background: rgba(30,58,138,0.1);
+  padding: 5px 14px;
+  border-radius: 100px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Section description ── */
+.section-desc {
+  font-size: 20px;
+  color: #64748b;
+  max-width: 740px;
+  line-height: 1.65;
+  margin-top: 16px;
+}
+
+/* ── Eyebrow label ── */
+.eyebrow {
+  font-family: 'Urbanist', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: #1e3a8a;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+/* ── Premise / Challenge slide ── */
+.challenge-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.challenge-card {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 30px 22px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.challenge-card .card-icon { font-size: 34px; margin-bottom: 14px; color: #94a3b8; }
+.challenge-card h4 { font-family: 'Urbanist', sans-serif; font-size: 19px; color: #0f172a; margin-bottom: 10px; }
+.challenge-card p { font-size: 16px; }
+
+.solution-bar {
+  padding: 20px 28px;
+  background: rgba(30,58,138,0.06);
+  border-radius: 12px;
+  border: 1px solid #1e3a8a;
+}
+
+.solution-bar p { font-size: 18px; color: #0f172a; }
+
+/* ── Roadmap slide ── */
+.roadmap-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin-top: 36px;
+}
+
+.roadmap-track::before {
+  content: "";
+  position: absolute;
+  top: 32px;
+  left: 10%; right: 10%;
+  height: 2px;
+  background: #e2e8f0;
+  z-index: 0;
+}
+
+.roadmap-step {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 14px; position: relative; z-index: 1;
+}
+
+.roadmap-step .circle {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: #1e3a8a; color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Urbanist', sans-serif; font-weight: 700; font-size: 22px;
+  box-shadow: 0 0 0 6px rgba(30,58,138,0.12);
+}
+
+.roadmap-step .r-name { font-family: 'Urbanist', sans-serif; font-size: 18px; font-weight: 700; color: #0f172a; text-align: center; }
+.roadmap-step .r-sub { font-size: 14px; color: #64748b; text-align: center; line-height: 1.4; }
+
+.roadmap-projects {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin-top: 28px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 18px;
+}
+
+.roadmap-projects .rp-item { text-align: center; padding: 0 8px; }
+.roadmap-projects .rp-item p { font-size: 14px; color: #94a3b8; line-height: 1.5; }
+.roadmap-projects .rp-item p strong { display: block; font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+
+/* ── Impact summary ── */
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+.impact-item {
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 28px 14px;
+  text-align: center;
+  border: 1px solid #1e3a8a;
+}
+
+.impact-item .i-icon { font-size: 28px; color: #1e3a8a; margin-bottom: 14px; }
+.impact-item h4 { font-family: 'Urbanist', sans-serif; font-size: 17px; color: #0f172a; margin-bottom: 8px; }
+.impact-item p { font-size: 14px; color: #64748b; line-height: 1.4; }
+
+/* ── Title slide extras ── */
+.title-meta {
+  display: flex; gap: 40px;
+  margin-top: 48px;
+  justify-content: center;
+}
+
+.title-meta-item { display: flex; align-items: center; gap: 10px; color: #64748b; font-size: 18px; }
+.title-meta-item i { color: #1e3a8a; font-size: 20px; }
+
+/* ── Mobile layout ── */
+.rounded-layout .image-wrapper {
+  border-radius: 50%;
+  width: 400px; height: 400px;
+  margin: 0 auto;
+}
+    </style>
+</head>
+<body>
+
+<div id="deck">
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 1 · TITLE
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <!-- Decorative background circles -->
+    <div style="position: absolute; bottom: 40px; left: -100px; width: 420px; height: 420px; border-radius: 50%; background: radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 70%); pointer-events: none; z-index: 0;"></div>
+
+    <div class="content-area" style="text-align: center; align-items: center; justify-content: center; gap: 0;">
+
+        <!-- Eyebrow pill -->
+        <div style="display: inline-flex; align-items: center; gap: 9px; background: rgba(30,58,138,0.07); border: 1px solid rgba(30,58,138,0.15); border-radius: 100px; padding: 7px 20px; margin-bottom: 30px;">
+            <i class="fa-solid fa-layer-group" style="color: #1e3a8a; font-size: 13px;"></i>
+            <span style="font-size: 13px; font-weight: 600; color: #1e3a8a; letter-spacing: 0.1em; text-transform: uppercase;">Data Science Dissemination</span>
+        </div>
+
+        <!-- Title -->
+        <h1 style="font-size: 96px; line-height: 1.0; letter-spacing: -3px;">
+            <span style="color: #94a3b8; font-weight: 400;">Beyond the</span><br>
+            <span style="color: #0f172a;">Static</span>
+        </h1>
+
+        <!-- Gradient rule -->
+        <div style="width: 64px; height: 4px; background: linear-gradient(90deg, #1e3a8a, #3b82f6); border-radius: 10px; margin: 24px auto;"></div>
+
+        <!-- Subtitle -->
+        <p style="font-size: 22px; color: #64748b; font-weight: 400; margin-bottom: 36px;">5 Modes of Research Communication</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 2 · THE PROBLEM
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <div>
+        <div class="eyebrow">The Premise</div>
+        <h2 class="slide-title">One Dataset, Many Visual Languages</h2>
+    </div>
+    <div class="content-area" style="justify-content: flex-start; margin-top: 0;">
+        <div class="challenge-grid">
+            <div class="challenge-card" style="border-color: #1e3a8a;">
+                <div class="card-icon" style="color: #1e3a8a;"><i class="fa-solid fa-microscope"></i></div>
+                <h4>Academic Peer Review</h4>
+                <p>Demands reproducible, precisely encoded figures. Static is not a limitation — it is the requirement for scientific rigor and publication standards.</p>
+            </div>
+            <div class="challenge-card" style="border-color: #1e3a8a;">
+                <div class="card-icon" style="color: #1e3a8a;"><i class="fa-solid fa-table-columns"></i></div>
+                <h4>Clinical Operations</h4>
+                <p>Demands filterable, comparative views that support repeated use. Interactivity enables the exploratory patterns of teams monitoring populations over time.</p>
+            </div>
+            <div class="challenge-card" style="border-color: #1e3a8a;">
+                <div class="card-icon" style="color: #1e3a8a;"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                <h4>Point-of-Care Encounter</h4>
+                <p>Demands immediate legibility on a small screen with minimal cognitive load. The design space narrows to what can be read and acted upon in seconds.</p>
+            </div>
+        </div>
+        <div class="solution-bar">
+            <p>The same underlying data, encoded differently for each context. No format is superior — each is optimal for its audience, task, and environment.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 3 · THE ROADMAP
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">The Dissemination Landscape</h2>
+    <div class="content-area">
+        <div class="roadmap-track">
+            <div class="roadmap-step">
+                <div class="circle">1</div>
+                <div class="r-name">Static</div>
+                <div class="r-sub">Fixed-format<br>scientific figures</div>
+            </div>
+            <div class="roadmap-step">
+                <div class="circle">2</div>
+                <div class="r-name">Interactive</div>
+                <div class="r-sub">User-controlled<br>web charts</div>
+            </div>
+            <div class="roadmap-step">
+                <div class="circle">3</div>
+                <div class="r-name">Dashboards</div>
+                <div class="r-sub">Multi-metric<br>operational views</div>
+            </div>
+            <div class="roadmap-step">
+                <div class="circle">4</div>
+                <div class="r-name">Mobile</div>
+                <div class="r-sub">Touch-first<br>point-of-care displays</div>
+            </div>
+            <div class="roadmap-step">
+                <div class="circle">5</div>
+                <div class="r-name">Ecosystem</div>
+                <div class="r-sub">Navigable<br>knowledge hubs</div>
+            </div>
+        </div>
+        <div class="roadmap-projects">
+            <div class="rp-item"><p><strong>Projects</strong>Journal figures &<br>peer-reviewed tables</p></div>
+            <div class="rp-item"><p><strong>Projects</strong>Plotly charts &<br>geospatial maps</p></div>
+            <div class="rp-item"><p><strong>Projects</strong>SCD dashboard, E-STAR<br>&amp; Veloxis report</p></div>
+            <div class="rp-item"><p><strong>Projects</strong>iChooseKidney<br>iOS app</p></div>
+            <div class="rp-item"><p><strong>Projects</strong>sektc.org &<br>estar-transplant.org</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 4 · SECTION 1 — STATIC FOUNDATIONS
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <div class="content-area section-layout">
+        <h2>Static Figures</h2>
+        <div class="accent-bar"></div>
+        <p class="subtitle">Fixed-Format Scientific Encoding</p>
+        <p class="section-desc">Print-optimized figures where every design decision — color, scale, annotation, layout — is fixed at render time. The absence of interactivity is intentional: reproducibility demands that every reader sees exactly the same visual.</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 5 · DATA-TO-VIZ DECISION TREE
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">Choosing the Right Chart <span class="step-chip">Static</span></h2>
+    <div class="content-area">
+        <div style="display: grid; grid-template-columns: 300px 1fr; gap: 40px; align-items: start; height: 100%;">
+            <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 4px;">
+                <h3 style="font-size: 24px;">data-to-viz.com</h3>
+                <div class="info-card" style="margin-bottom: 0;">
+                    <h4>Decision Tree</h4>
+                    <p>Select your data type — numeric, categorical, time series — and the tree guides you to the appropriate chart family.</p>
+                </div>
+                <div class="info-card" style="margin-bottom: 0;">
+                    <h4>Code + Caveats</h4>
+                    <p>Each chart links to R/Python/D3/React implementation examples and a gallery of common mistakes to avoid.</p>
+                </div>
+            </div>
+            <div onwheel="event.stopPropagation()" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 8px 24px rgba(0,0,0,0.07); display: flex; flex-direction: column; height: 490px;">
+                <div style="background: #f1f5f9; padding: 9px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #f87171;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #fbbf24;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #34d399;"></div>
+                    <div style="flex: 1; background: white; border-radius: 100px; padding: 4px 14px; font-size: 12px; color: #64748b; margin-left: 8px; font-family: 'Inter', sans-serif;">data-to-viz.com</div>
+                    <a href="https://www.data-to-viz.com" target="_blank" style="font-size: 11px; color: #1e3a8a; font-weight: 600; text-decoration: none; white-space: nowrap;">Open ↗</a>
+                </div>
+                <div style="flex: 1; overflow: hidden; position: relative;">
+                    <iframe src="https://www.data-to-viz.com"
+                            style="position: absolute; top: -750px; left: 0; width: 160%; height: 430%; transform: scale(0.625); transform-origin: top left; border: none;"
+                            loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 6 · MULTI-PANEL FIGURE ARCHITECTURE
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">Multi-Panel Figure Architecture <span class="step-chip">Static</span></h2>
+    <div class="content-area">
+        <div class="two-column" style="gap: 50px; align-items: start;">
+            <div>
+                <h3 style="font-size: 26px; margin-bottom: 10px;">Composition as Argument</h3>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 10px;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">Shared Axis Alignment</h4>
+                    <p style="font-size: 14px;">Panels that share a common x- or y-axis let readers compare distributions directly without re-reading scale labels — the visual grammar of the layout encodes the comparison structure.</p>
+                </div>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 10px;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">Faceting by Variable</h4>
+                    <p style="font-size: 14px;">Splitting by subgroup (by race, center, time period) across panels converts a single cluttered chart into a small-multiple array — each panel readable in isolation, the pattern readable across the whole.</p>
+                </div>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 0;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">Annotation as Evidence</h4>
+                    <p style="font-size: 14px;">Significance brackets, confidence bands, and at-risk tables embedded within the figure deliver statistical context without requiring the reader to cross-reference a table.</p>
+                </div>
+            </div>
+            <div>
+                <h3 style="color: #64748b; font-size: 20px; font-weight: 600; margin-bottom: 20px;">Design Principles</h3>
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="display: flex; align-items: flex-start; gap: 16px; padding: 18px 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: #1e3a8a; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Urbanist', sans-serif; font-weight: 700; font-size: 16px; flex-shrink: 0;">A</div>
+                        <div><p style="font-size: 15px; color: #0f172a; font-weight: 600; margin-bottom: 4px;">Alignment</p><p style="font-size: 14px; color: #64748b; line-height: 1.5;">Grid-lock panels to a shared baseline so the eye moves horizontally, not hunting for axes.</p></div>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 16px; padding: 18px 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: #1e3a8a; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Urbanist', sans-serif; font-weight: 700; font-size: 16px; flex-shrink: 0;">R</div>
+                        <div><p style="font-size: 15px; color: #0f172a; font-weight: 600; margin-bottom: 4px;">Redundancy Reduction</p><p style="font-size: 14px; color: #64748b; line-height: 1.5;">One shared legend, one shared title — no repeated labels. Every ink mark earns its place.</p></div>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 16px; padding: 18px 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: #1e3a8a; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Urbanist', sans-serif; font-weight: 700; font-size: 16px; flex-shrink: 0;">H</div>
+                        <div><p style="font-size: 15px; color: #0f172a; font-weight: 600; margin-bottom: 4px;">Hierarchy</p><p style="font-size: 14px; color: #64748b; line-height: 1.5;">Panel order mirrors narrative order — the reader's eye should travel through the figure the same way it travels through the argument.</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 7 · THE LIMITS OF STATIC
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">The Wall of Static <span class="step-chip">Static</span></h2>
+    <div class="content-area">
+        <div class="two-column" style="align-items: start; gap: 50px;">
+            <div>
+                <h3 style="font-size: 26px; margin-bottom: 10px;">Where Static Breaks Down</h3>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 10px;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">Fixed Viewport, Hidden Data</h4>
+                    <p style="font-size: 14px;">Overplotting, overlapping labels, and compressed axes are permanent. A static figure cannot respond to a reader's need to zoom in, filter, or isolate a subgroup.</p>
+                </div>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 10px;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">One State, One Moment</h4>
+                    <p style="font-size: 14px;">A published figure is frozen at the time of render. Updated data requires a new figure — there is no mechanism to refresh without re-exporting and republishing.</p>
+                </div>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 0;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">No Reader Agency</h4>
+                    <p style="font-size: 14px;">The author decides what is visible. Readers who want to compare a specific subgroup, re-sort a ranking, or examine an outlier are left with the author's single chosen view.</p>
+                </div>
+            </div>
+            <div>
+                <h3 style="color: #64748b; font-size: 20px; font-weight: 600; margin-bottom: 20px;">When to go beyond static</h3>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="padding: 16px 20px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca; display: flex; gap: 14px; align-items: flex-start;">
+                        <i class="fa-solid fa-xmark" style="color: #ef4444; margin-top: 3px; flex-shrink: 0;"></i>
+                        <p style="font-size: 15px; color: #1e293b; line-height: 1.5;">Data has more than ~3 dimensions that the reader needs to explore simultaneously</p>
+                    </div>
+                    <div style="padding: 16px 20px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca; display: flex; gap: 14px; align-items: flex-start;">
+                        <i class="fa-solid fa-xmark" style="color: #ef4444; margin-top: 3px; flex-shrink: 0;"></i>
+                        <p style="font-size: 15px; color: #1e293b; line-height: 1.5;">The audience needs to filter, drill down, or answer their own questions — not just receive yours</p>
+                    </div>
+                    <div style="padding: 16px 20px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca; display: flex; gap: 14px; align-items: flex-start;">
+                        <i class="fa-solid fa-xmark" style="color: #ef4444; margin-top: 3px; flex-shrink: 0;"></i>
+                        <p style="font-size: 15px; color: #1e293b; line-height: 1.5;">The underlying data updates regularly and the figure must stay current without manual re-export</p>
+                    </div>
+                    <div style="padding: 16px 20px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0; display: flex; gap: 14px; align-items: flex-start;">
+                        <i class="fa-solid fa-check" style="color: #22c55e; margin-top: 3px; flex-shrink: 0;"></i>
+                        <p style="font-size: 15px; color: #1e293b; line-height: 1.5;">Static remains the right choice for peer review, print, and any context demanding exact reproducibility</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 8 · SECTION 2 — INTERACTIVE EXPLORATION
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <div class="content-area section-layout">
+        <h2>Interactive Charts</h2>
+        <div class="accent-bar"></div>
+        <p class="subtitle">Browser-Rendered, User-Controlled Views</p>
+        <p class="section-desc">The data structure is fixed, but the visual state is user-controlled. Filtering, zooming, and hovering shift interpretive authority from author to reader — the same dataset surfaces differently for every person who explores it.</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 9 · PLOTLY INTERACTIVE FIGURES
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">Five Interactive Superpowers <span class="step-chip">Interactive</span></h2>
+    <div class="content-area" style="justify-content: flex-start; gap: 14px;">
+        <p style="font-size: 15px; color: #64748b; line-height: 1.5; margin: 0;">Four interaction patterns — each solving a problem that no static figure can address.</p>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; flex: 1;">
+
+            <!-- 01 Hover tooltip -->
+            <div style="background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0; padding: 20px 16px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-hand-pointer" style="color: #1e3a8a; font-size: 20px; flex-shrink: 0;"></i>
+                    <h4 style="font-family: 'Urbanist', sans-serif; font-size: 15px; color: #0f172a; line-height: 1.3; margin: 0;">Hover-on-Demand Detail</h4>
+                </div>
+                <div style="font-size: 11px; color: #b91c1c; background: #fef2f2; border-radius: 100px; padding: 3px 10px; display: inline-block; font-weight: 600; width: fit-content;">Static: labels collide</div>
+                <p style="font-size: 13px; color: #475569; line-height: 1.5; margin: 0;">A dense scatter of hundreds of patients — hover surfaces anonymous ID, diagnosis age, lab values, and comorbidities. Full clinical context on request, zero overplotting by default.</p>
+                <a href="#" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #1e3a8a; text-decoration: none;"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i> View example</a>
+            </div>
+
+            <!-- 02 Crossfilter / linked views -->
+            <div style="background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0; padding: 20px 16px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-sliders" style="color: #1e3a8a; font-size: 20px; flex-shrink: 0;"></i>
+                    <h4 style="font-family: 'Urbanist', sans-serif; font-size: 15px; color: #0f172a; line-height: 1.3; margin: 0;">Linked View Filtering</h4>
+                </div>
+                <div style="font-size: 11px; color: #b91c1c; background: #fef2f2; border-radius: 100px; padding: 3px 10px; display: inline-block; font-weight: 600; width: fit-content;">Static: author decides</div>
+                <p style="font-size: 13px; color: #475569; line-height: 1.5; margin: 0;">Click "age ≥ 65, smoker" in a bar chart and the Kaplan-Meier curve instantly redraws for that subgroup — the audience filters its own clinical question in real time.</p>
+                <a href="#" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #1e3a8a; text-decoration: none;"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i> View example</a>
+            </div>
+
+            <!-- 03 Animation frames -->
+            <div style="background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0; padding: 20px 16px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-circle-play" style="color: #1e3a8a; font-size: 20px; flex-shrink: 0;"></i>
+                    <h4 style="font-family: 'Urbanist', sans-serif; font-size: 15px; color: #0f172a; line-height: 1.3; margin: 0;">Temporal Animation</h4>
+                </div>
+                <div style="font-size: 11px; color: #b91c1c; background: #fef2f2; border-radius: 100px; padding: 3px 10px; display: inline-block; font-weight: 600; width: fit-content;">Static: spaghetti lines</div>
+                <p style="font-size: 13px; color: #475569; line-height: 1.5; margin: 0;">A time-slider animated bubble chart plays disease spread county by county, or tracks patient biomarkers drifting over months — continuous motion no sequence of static frames can match.</p>
+                <a href="#" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #1e3a8a; text-decoration: none;"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i> View example</a>
+            </div>
+
+            <!-- 04 Geospatial referral map -->
+            <div style="background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0; padding: 20px 16px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-map-location-dot" style="color: #1e3a8a; font-size: 20px; flex-shrink: 0;"></i>
+                    <h4 style="font-family: 'Urbanist', sans-serif; font-size: 15px; color: #0f172a; line-height: 1.3; margin: 0;">Geospatial Connectivity</h4>
+                </div>
+                <div style="font-size: 11px; color: #b91c1c; background: #fef2f2; border-radius: 100px; padding: 3px 10px; display: inline-block; font-weight: 600; width: fit-content;">Static: no drill-down</div>
+                <p style="font-size: 13px; color: #475569; line-height: 1.5; margin: 0;">Directed arcs encode referral volume between facilities — click any node to surface case counts, travel distances, and payer mix embedded directly within the spatial layout.</p>
+                <a href="https://sites.google.com/view/referral-pattern/introduction" target="_blank" style="margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #1e3a8a; text-decoration: none;"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i> View example</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 10 · TRANSITION — INTERACTIVE → DASHBOARD
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">From Exploration to Operations</h2>
+    <div class="content-area">
+        <div class="two-column" style="align-items: start; gap: 50px;">
+            <div>
+                <h3 style="font-size: 26px; margin-bottom: 10px;">The Interactive Figure's Ceiling</h3>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 10px;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">One Question at a Time</h4>
+                    <p style="font-size: 14px;">Each chart is built around a single analytical frame. Exploring a second dimension — a different cohort, a different time window — requires navigating away and starting over.</p>
+                </div>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 10px;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">Ephemeral State</h4>
+                    <p style="font-size: 14px;">Filtered views and zoom levels live only in the session. There is no persistent URL encoding the exact subgroup a clinician found useful yesterday — every visit starts blank.</p>
+                </div>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 0;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">No Shared Operational View</h4>
+                    <p style="font-size: 14px;">A scatter plot cannot simultaneously show a trend, a distribution, and a KPI summary. The team navigates between figures rather than reading a unified picture.</p>
+                </div>
+            </div>
+            <div>
+                <h3 style="color: #64748b; font-size: 20px; font-weight: 600; margin-bottom: 20px;">What dashboards add</h3>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="padding: 16px 20px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0; display: flex; gap: 14px; align-items: flex-start;">
+                        <i class="fa-solid fa-table-cells-large" style="color: #16a34a; margin-top: 2px; flex-shrink: 0;"></i>
+                        <p style="font-size: 15px; color: #1e293b; line-height: 1.5;"><strong>Multiple panels, one viewport</strong> — KPIs, trends, and breakdowns coexist in a single screen, eliminating the need to navigate between charts</p>
+                    </div>
+                    <div style="padding: 16px 20px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0; display: flex; gap: 14px; align-items: flex-start;">
+                        <i class="fa-solid fa-bookmark" style="color: #16a34a; margin-top: 2px; flex-shrink: 0;"></i>
+                        <p style="font-size: 15px; color: #1e293b; line-height: 1.5;"><strong>Persistent, bookmarkable state</strong> — the same URL returns the same filtered view, making dashboards a reusable operational artifact rather than a one-time exploration</p>
+                    </div>
+                    <div style="padding: 16px 20px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0; display: flex; gap: 14px; align-items: flex-start;">
+                        <i class="fa-solid fa-rotate" style="color: #16a34a; margin-top: 2px; flex-shrink: 0;"></i>
+                        <p style="font-size: 15px; color: #1e293b; line-height: 1.5;"><strong>Designed for repeated use</strong> — navigated rather than read, visited weekly rather than shared once; the interface assumes a user who returns, not a reader who arrives once</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 11 · SECTION 3 — SYNTHESIZED DASHBOARDS
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <div class="content-area section-layout">
+        <h2>Dashboards &amp; Reports</h2>
+        <div class="accent-bar"></div>
+        <p class="subtitle">Monitoring Dashboards &amp; Interactive Online Reports</p>
+        <p class="section-desc">Dashboards are multi-panel monitoring interfaces designed for repeated operational use — navigated rather than read, bookmarked rather than printed. Online reports embed interactive figures within narrative prose, combining document depth with live chart responsiveness.</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 10 · SCD DASHBOARD
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">Chronic Care Surveillance <span class="step-chip">Dashboard</span></h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <h3>Sickle Cell Disease Dashboard</h3>
+                <div class="info-card">
+                    <h4>KPI Sparkline Cards</h4>
+                    <p>Top-row summary cards embed miniature trend lines alongside current metric values — compressing a longitudinal indicator into a single scannable element.</p>
+                </div>
+                <div class="info-card">
+                    <h4>Faceted Time-Series Grid</h4>
+                    <p>Multiple indicators share a common x-axis across a panel grid, enabling side-by-side comparison of temporal trends without axis-reading overhead.</p>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px;">
+                    <span style="font-size: 12px; color: #1e3a8a; background: rgba(30,58,138,0.08); border-radius: 100px; padding: 4px 12px; font-weight: 600;"><i class="fa-solid fa-hand-pointer" style="font-size: 10px; margin-right: 4px;"></i>Hover tooltips</span>
+                    <span style="font-size: 12px; color: #1e3a8a; background: rgba(30,58,138,0.08); border-radius: 100px; padding: 4px 12px; font-weight: 600;"><i class="fa-solid fa-sliders" style="font-size: 10px; margin-right: 4px;"></i>Dropdown filters</span>
+                    <span style="font-size: 12px; color: #1e3a8a; background: rgba(30,58,138,0.08); border-radius: 100px; padding: 4px 12px; font-weight: 600;"><i class="fa-solid fa-filter" style="font-size: 10px; margin-right: 4px;"></i>Linked filtering</span>
+                </div>
+            </div>
+            <div onwheel="event.stopPropagation()" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.06); height: 420px; display: flex; flex-direction: column;">
+                <div style="background: #f1f5f9; padding: 9px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #f87171;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #fbbf24;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #34d399;"></div>
+                    <div style="flex: 1; background: white; border-radius: 100px; padding: 4px 14px; font-size: 12px; color: #64748b; margin-left: 8px; font-family: 'Inter', sans-serif;">connect.posit.iu.edu/SCD_IN/</div>
+                    <a href="https://connect.posit.iu.edu/SCD_IN/" target="_blank" style="font-size: 11px; color: #1e3a8a; font-weight: 600; text-decoration: none; white-space: nowrap;">Open ↗</a>
+                </div>
+                <div style="flex: 1; overflow: hidden; position: relative;">
+                    <iframe src="https://connect.posit.iu.edu/SCD_IN/"
+                            style="position: absolute; top: 0; left: 0; width: 200%; height: 200%; transform: scale(0.5); transform-origin: top left; border: none;"
+                            loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 11 · E-STAR REGISTRY
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">Registry Transparency <span class="step-chip">Dashboard</span></h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <h3>E-STAR Registry Dashboard</h3>
+                <div class="info-card">
+                    <h4>Center Benchmarking Plot</h4>
+                    <p>Funnel plots and ranked dot charts position each transplant center relative to program-wide distributions — encoding magnitude and expected variation in a single view.</p>
+                </div>
+                <div class="info-card">
+                    <h4>Stratified Comparison Charts</h4>
+                    <p>Side-by-side grouped bars decompose outcomes by race, insurance, and region simultaneously — making multi-dimensional distributions legible in one frame.</p>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px;">
+                    <span style="font-size: 12px; color: #1e3a8a; background: rgba(30,58,138,0.08); border-radius: 100px; padding: 4px 12px; font-weight: 600;"><i class="fa-solid fa-hand-pointer" style="font-size: 10px; margin-right: 4px;"></i>Hover tooltips</span>
+                    <span style="font-size: 12px; color: #1e3a8a; background: rgba(30,58,138,0.08); border-radius: 100px; padding: 4px 12px; font-weight: 600;"><i class="fa-solid fa-sliders" style="font-size: 10px; margin-right: 4px;"></i>Dropdown filters</span>
+                    <span style="font-size: 12px; color: #1e3a8a; background: rgba(30,58,138,0.08); border-radius: 100px; padding: 4px 12px; font-weight: 600;"><i class="fa-solid fa-filter" style="font-size: 10px; margin-right: 4px;"></i>Linked filtering</span>
+                </div>
+            </div>
+            <div onwheel="event.stopPropagation()" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.06); height: 420px; display: flex; flex-direction: column;">
+                <div style="background: #f1f5f9; padding: 9px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #f87171;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #fbbf24;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #34d399;"></div>
+                    <div style="flex: 1; background: white; border-radius: 100px; padding: 4px 14px; font-size: 12px; color: #64748b; margin-left: 8px; font-family: 'Inter', sans-serif;">estardashboard.shinyapps.io/public/</div>
+                    <a href="https://estardashboard.shinyapps.io/public/" target="_blank" style="font-size: 11px; color: #1e3a8a; font-weight: 600; text-decoration: none; white-space: nowrap;">Open ↗</a>
+                </div>
+                <div style="flex: 1; overflow: hidden; position: relative;">
+                    <iframe src="https://estardashboard.shinyapps.io/public/"
+                            style="position: absolute; top: 0; left: 0; width: 200%; height: 200%; transform: scale(0.5); transform-origin: top left; border: none;"
+                            loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 12 · VELOXIS DYNAMIC REPORT
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">Dynamic Reporting <span class="step-chip">Report</span></h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <h3>Veloxis Data Report</h3>
+                <div class="info-card">
+                    <h4>Inline Figure Embedding</h4>
+                    <p>Interactive charts are anchored within narrative sections — visualization and prose share the same scroll context rather than being separated into appendices.</p>
+                </div>
+                <div class="info-card">
+                    <h4>Widget-Driven Re-Rendering</h4>
+                    <p>Dropdown and date-range inputs filter the active cohort and re-render charts in place — a parameterized live view without navigating away from the report.</p>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px;">
+                    <span style="font-size: 12px; color: #1e3a8a; background: rgba(30,58,138,0.08); border-radius: 100px; padding: 4px 12px; font-weight: 600;"><i class="fa-solid fa-hand-pointer" style="font-size: 10px; margin-right: 4px;"></i>Hover tooltips</span>
+                    <span style="font-size: 12px; color: #1e3a8a; background: rgba(30,58,138,0.08); border-radius: 100px; padding: 4px 12px; font-weight: 600;"><i class="fa-solid fa-sliders" style="font-size: 10px; margin-right: 4px;"></i>Dropdown filters</span>
+                    <span style="font-size: 12px; color: #1e3a8a; background: rgba(30,58,138,0.08); border-radius: 100px; padding: 4px 12px; font-weight: 600;"><i class="fa-solid fa-calendar" style="font-size: 10px; margin-right: 4px;"></i>Date-range inputs</span>
+                </div>
+            </div>
+            <div onwheel="event.stopPropagation()" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.06); height: 420px; display: flex; flex-direction: column;">
+                <div style="background: #f1f5f9; padding: 9px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #f87171;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #fbbf24;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #34d399;"></div>
+                    <div style="flex: 1; background: white; border-radius: 100px; padding: 4px 14px; font-size: 12px; color: #64748b; margin-left: 8px; font-family: 'Inter', sans-serif;">connect.posit.iu.edu — Veloxis Report</div>
+                    <a href="https://connect.posit.iu.edu/estar-adr/" target="_blank" style="font-size: 11px; color: #1e3a8a; font-weight: 600; text-decoration: none; white-space: nowrap;">Open ↗</a>
+                </div>
+                <div style="flex: 1; overflow: hidden; position: relative;">
+                    <iframe src="https://connect.posit.iu.edu/estar-adr/"
+                            style="position: absolute; top: 0; left: 0; width: 200%; height: 200%; transform: scale(0.5); transform-origin: top left; border: none;"
+                            loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 13 · TRANSITION — DASHBOARD → MOBILE
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">From the Office to the Bedside</h2>
+    <div class="content-area">
+        <div class="two-column" style="align-items: start; gap: 50px;">
+            <div>
+                <h3 style="font-size: 26px; margin-bottom: 10px;">Where Dashboards Can't Follow</h3>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 10px;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">Requires a Seated Workflow</h4>
+                    <p style="font-size: 14px;">Dashboards assume a user at a workstation. Clinical encounters happen at bedsides, in exam rooms, and in hallways — contexts where opening a browser and navigating a multi-panel layout simply isn't feasible.</p>
+                </div>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 10px;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">Screen Size Mismatch</h4>
+                    <p style="font-size: 14px;">The information density that makes a dashboard powerful on a 27-inch monitor makes it illegible on a phone. Multi-panel grid layouts don't collapse gracefully to a 6-inch screen.</p>
+                </div>
+                <div class="info-card" style="padding: 13px 18px; margin-bottom: 0;">
+                    <h4 style="font-size: 16px; margin-bottom: 5px;">Login & Load Friction</h4>
+                    <p style="font-size: 14px;">Authenticating, loading a JavaScript-heavy report, and maintaining a session creates friction that breaks the pace of a brief clinical encounter — the window for decision support closes in seconds.</p>
+                </div>
+            </div>
+            <div>
+                <h3 style="color: #64748b; font-size: 20px; font-weight: 600; margin-bottom: 20px;">What mobile accessibility unlocks</h3>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="padding: 16px 20px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0; display: flex; gap: 14px; align-items: flex-start;">
+                        <i class="fa-solid fa-mobile-screen" style="color: #16a34a; margin-top: 2px; flex-shrink: 0;"></i>
+                        <p style="font-size: 15px; color: #1e293b; line-height: 1.5;"><strong>Always in pocket</strong> — a native app requires no browser, no login at the point of care; it opens in one tap on a device clinicians and patients already carry</p>
+                    </div>
+                    <div style="padding: 16px 20px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0; display: flex; gap: 14px; align-items: flex-start;">
+                        <i class="fa-solid fa-bolt" style="color: #16a34a; margin-top: 2px; flex-shrink: 0;"></i>
+                        <p style="font-size: 15px; color: #1e293b; line-height: 1.5;"><strong>Designed for 5-second interactions</strong> — touch-optimized inputs, minimal cognitive load, and a single output screen match the rhythm of a brief clinical encounter</p>
+                    </div>
+                    <div style="padding: 16px 20px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0; display: flex; gap: 14px; align-items: flex-start;">
+                        <i class="fa-solid fa-user-check" style="color: #16a34a; margin-top: 2px; flex-shrink: 0;"></i>
+                        <p style="font-size: 15px; color: #1e293b; line-height: 1.5;"><strong>Personalized to the patient present</strong> — inputs collected in real time feed a model for this patient, this moment — not a population average displayed on a shared monitor</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 14 · SECTION 4 — POINT-OF-CARE UTILITY
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <div class="content-area section-layout">
+        <h2>Mobile Applications</h2>
+        <div class="accent-bar"></div>
+        <p class="subtitle">Touch-First Point-of-Care Displays</p>
+        <p class="section-desc">Native applications built for brief, high-stakes clinical encounters. The design challenge extends beyond chart encoding to include input flows, decision logic, and personalized risk computation — guiding non-expert users from data entry to a meaningful output in seconds.</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 14 · iCHOOSEKIDNEY APP
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">Mobile Decision Support <span class="step-chip">Mobile</span></h2>
+    <div class="content-area">
+        <div class="two-column" style="align-items: center;">
+            <div>
+                <h3>iChooseKidney App</h3>
+                <div class="info-card">
+                    <h4>Guided Decision Input Flow</h4>
+                    <p>A stepwise questionnaire collects patient-specific variables — age, diagnosis, donor type — and feeds a personalized risk model. The primary interface is a structured input form, not a chart.</p>
+                </div>
+                <div class="info-card">
+                    <h4>Icon Array Risk Display</h4>
+                    <p>Frequency grids replace probability text — representing risk as a count of icons out of 100, a format shown to improve lay comprehension of relative magnitude at point of consultation.</p>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <div style="border-radius: 40px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,0.18); border: 7px solid #1e293b; width: 224px; height: 448px; background: #000; flex-shrink: 0;">
+                    <video controls playsinline style="width: 100%; height: 100%; object-fit: cover;">
+                        <source src="ScreenRecording_04-28-2026 11-10-24_1.MP4" type="video/mp4">
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 15 · SECTION 5 — DIGITAL ECOSYSTEMS
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <div class="content-area section-layout">
+        <h2>Digital Ecosystems</h2>
+        <div class="accent-bar"></div>
+        <p class="subtitle">Navigable Knowledge Architecture</p>
+        <p class="section-desc">Full websites that aggregate tools, visualizations, and documentation into navigable structures. The design challenge shifts from chart layout to information architecture — how outputs are organized, linked, and discoverable over time.</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 16 · SEKTC.ORG
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">Coalition Web Presence <span class="step-chip">Ecosystem</span></h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <h3>sektc.org Website</h3>
+                <div class="info-card">
+                    <h4>Multi-Project Information Architecture</h4>
+                    <p>The site surfaces the coalition's active research projects — E-STAR Registry, T-REX referral app, iChooseKidney — in a single navigable home, making distributed research infrastructure visible to patients, clinicians, and policymakers alike.</p>
+                </div>
+                <div class="info-card">
+                    <h4>Aggregated Resource Directory</h4>
+                    <p>A curated resources section links out to partner tools and community programs — connecting users to the full transplant access ecosystem from one landing point, without requiring knowledge of individual URLs.</p>
+                </div>
+                <a href="https://sektc.org" target="_blank" style="margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; padding: 9px 20px; background: #1e3a8a; color: white; border-radius: 100px; font-size: 13px; font-weight: 600; text-decoration: none;"><i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 11px;"></i> Visit sektc.org</a>
+            </div>
+            <div onwheel="event.stopPropagation()" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.06); height: 420px; display: flex; flex-direction: column;">
+                <div style="background: #f1f5f9; padding: 9px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #f87171;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #fbbf24;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #34d399;"></div>
+                    <div style="flex: 1; background: white; border-radius: 100px; padding: 4px 14px; font-size: 12px; color: #64748b; margin-left: 8px; font-family: 'Inter', sans-serif;">sektc.org</div>
+                    <a href="https://sektc.org" target="_blank" style="font-size: 11px; color: #1e3a8a; font-weight: 600; text-decoration: none; white-space: nowrap;">Open ↗</a>
+                </div>
+                <div style="flex: 1; overflow: hidden; position: relative;">
+                    <iframe src="https://sektc.org"
+                            style="position: absolute; top: 0; left: 0; width: 200%; height: 200%; transform: scale(0.5); transform-origin: top left; border: none;"
+                            loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 17 · ESTAR WEBSITE BONUS
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <div>
+        <div class="eyebrow">BONUS</div>
+        <h2 class="slide-title">E-STAR Website, Rebuilt From Scratch <span class="step-chip">Ecosystem</span></h2>
+    </div>
+    <div class="content-area">
+        <div class="two-column" style="gap: 50px;">
+            <div>
+                <h3>estar-transplant.org</h3>
+                <div class="info-card">
+                    <h4>No Subscriptions, Full Ownership</h4>
+                    <p>Built with plain HTML, CSS, and JavaScript — no WordPress, no Wix, no monthly platform fees. Hosted free on GitHub Pages; your team owns and controls the code entirely.</p>
+                </div>
+                <div class="info-card">
+                    <h4>Team Kept the Original</h4>
+                    <p>After review, the team chose to keep the existing site — the new design leaned contemporary and lifestyle-forward, which didn't match the program's institutional tone.</p>
+                </div>
+                <div style="margin-top: 10px; padding: 14px 18px; background: rgba(251,191,36,0.08); border-radius: 12px; border: 1px solid #fbbf24; display: flex; align-items: center; gap: 12px;">
+                    <i class="fa-solid fa-gift" style="color: #d97706; font-size: 16px; flex-shrink: 0;"></i>
+                    <p style="font-size: 14px; color: #0f172a;">Like this design? I can swap in your content and deploy it — no subscriptions, no vendor lock-in. <strong>Just ask.</strong></p>
+                </div>
+            </div>
+            <div onwheel="event.stopPropagation()" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.06); height: 420px; display: flex; flex-direction: column;">
+                <div style="background: #f1f5f9; padding: 9px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #f87171;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #fbbf24;"></div>
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #34d399;"></div>
+                    <div style="flex: 1; background: white; border-radius: 100px; padding: 4px 14px; font-size: 12px; color: #64748b; margin-left: 8px; font-family: 'Inter', sans-serif;">dimengyu.github.io/estar-transplant.org/</div>
+                    <a href="https://dimengyu.github.io/estar-transplant.org/" target="_blank" style="font-size: 11px; color: #1e3a8a; font-weight: 600; text-decoration: none; white-space: nowrap;">Open ↗</a>
+                </div>
+                <div style="flex: 1; overflow: hidden; position: relative;">
+                    <iframe src="https://dimengyu.github.io/estar-transplant.org/"
+                            style="position: absolute; top: 0; left: 0; width: 200%; height: 200%; transform: scale(0.5); transform-origin: top left; border: none;"
+                            loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 18 · FULL SPECTRUM SUMMARY
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <h2 class="slide-title">The Research Output Spectrum</h2>
+    <div class="content-area">
+        <div class="impact-grid">
+            <div class="impact-item">
+                <div class="i-icon"><i class="fa-solid fa-file-lines"></i></div>
+                <h4>Static</h4>
+                <p>Journal figures &amp; peer-reviewed evidence</p>
+            </div>
+            <div class="impact-item">
+                <div class="i-icon"><i class="fa-solid fa-arrow-pointer"></i></div>
+                <h4>Interactive</h4>
+                <p>Plotly charts &amp; geospatial referral maps</p>
+            </div>
+            <div class="impact-item">
+                <div class="i-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                <h4>Dashboards</h4>
+                <p>SCD dashboard, E-STAR dashboard &amp; Veloxis report</p>
+            </div>
+            <div class="impact-item">
+                <div class="i-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+                <h4>Mobile</h4>
+                <p>iChooseKidney point-of-care decision tool</p>
+            </div>
+            <div class="impact-item">
+                <div class="i-icon"><i class="fa-solid fa-globe"></i></div>
+                <h4>Ecosystem</h4>
+                <p>sektc.org training hub &amp; portfolio sites</p>
+            </div>
+        </div>
+        <div style="margin-top: 34px; padding: 22px 36px; background: rgba(30,58,138,0.06); border-radius: 12px; border: 1px solid #1e3a8a; text-align: center;">
+            <p style="font-size: 19px; color: #0f172a;">Five formats, five audiences, one underlying dataset — each output is optimal for its context, and together they ensure research reaches every stakeholder through the medium that serves them best.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 19 · Q&A
+══════════════════════════════════════════════════════ -->
+<div class="slide-container">
+    <div class="content-area section-layout">
+        <h2 style="color: #1e3a8a; font-family: 'Urbanist', sans-serif; font-size: 72px;">Questions?</h2>
+        <div class="accent-bar"></div>
+        <p class="subtitle">Or comments. Concerns. Complaints. Compliments.</p>
+        <p style="margin-top: 22px; font-size: 17px; color: #94a3b8; font-style: italic;">
+            (Aggressive nodding also accepted.)
+        </p>
+    </div>
+</div>
+
+
+
+</div><!-- /#deck -->
+
+<nav class="nav-dots" id="nav-dots" aria-label="Slide navigation"></nav>
+<div id="slide-counter">1 / 19</div>
+
+<script>
+(function () {
+  var deck    = document.getElementById('deck');
+  var slides  = Array.from(document.querySelectorAll('#deck .slide-container'));
+  var dotsEl  = document.getElementById('nav-dots');
+  var countEl = document.getElementById('slide-counter');
+  var total   = slides.length;
+  var cur     = 0;
+  var busy    = false;
+
+  // Build navigation dots
+  slides.forEach(function (_, i) {
+    var btn = document.createElement('button');
+    btn.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    btn.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+    btn.addEventListener('click', function () { go(i); });
+    dotsEl.appendChild(btn);
+  });
+
+  function updateUI() {
+    countEl.textContent = (cur + 1) + ' / ' + total;
+    var dots = document.querySelectorAll('.nav-dot');
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].classList.toggle('active', i === cur);
+    }
+  }
+
+  function go(next) {
+    if (next < 0 || next >= total || busy || next === cur) return;
+    busy = true;
+    var dir      = next > cur ? 1 : -1;
+    var outSlide = slides[cur];
+    var inSlide  = slides[next];
+
+    // Stage incoming slide off-screen in direction of travel
+    inSlide.style.transition    = 'none';
+    inSlide.style.opacity       = '0';
+    inSlide.style.transform     = 'translateY(' + (dir * 24) + 'px)';
+    inSlide.style.pointerEvents = 'none';
+    void inSlide.offsetHeight; // force reflow
+
+    // Animate outgoing
+    outSlide.style.transition    = 'opacity 0.42s ease, transform 0.42s ease';
+    outSlide.style.opacity       = '0';
+    outSlide.style.transform     = 'translateY(' + (-dir * 24) + 'px)';
+    outSlide.style.pointerEvents = 'none';
+
+    // Animate incoming
+    inSlide.style.transition    = 'opacity 0.42s ease, transform 0.42s ease';
+    inSlide.style.opacity       = '1';
+    inSlide.style.transform     = 'translateY(0)';
+    inSlide.style.pointerEvents = 'all';
+
+    cur = next;
+    updateUI();
+    setTimeout(function () { busy = false; }, 460);
+  }
+
+  // Scale deck to fit any viewport size
+  function scaleToFit() {
+    var s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    deck.style.transform = 'translate(-50%, -50%) scale(' + s + ')';
+  }
+  scaleToFit();
+  window.addEventListener('resize', scaleToFit);
+
+  // Initialize
+  slides[0].style.opacity       = '1';
+  slides[0].style.transform     = 'translateY(0)';
+  slides[0].style.pointerEvents = 'all';
+  updateUI();
+
+  // Wheel: accumulate delta and debounce to avoid trackpad over-firing
+  var wheelAccum = 0, wheelTimer;
+  window.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    wheelAccum += e.deltaY;
+    clearTimeout(wheelTimer);
+    wheelTimer = setTimeout(function () {
+      if (!busy) {
+        if (wheelAccum > 20)       go(cur + 1);
+        else if (wheelAccum < -20) go(cur - 1);
+      }
+      wheelAccum = 0;
+    }, 60);
+  }, { passive: false });
+
+  // Keyboard
+  window.addEventListener('keydown', function (e) {
+    var fwd = (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === ' ');
+    var bwd = (e.key === 'ArrowUp'   || e.key === 'PageUp'   || e.key === 'ArrowLeft');
+    if (fwd) { e.preventDefault(); go(cur + 1); }
+    if (bwd) { e.preventDefault(); go(cur - 1); }
+  });
+
+  // Touch
+  var touchY0 = 0;
+  window.addEventListener('touchstart', function (e) { touchY0 = e.touches[0].clientY; }, { passive: true });
+  window.addEventListener('touchend',   function (e) {
+    var diff = touchY0 - e.changedTouches[0].clientY;
+    if (Math.abs(diff) > 40) go(diff > 0 ? cur + 1 : cur - 1);
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>
